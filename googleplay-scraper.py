@@ -3,15 +3,27 @@ import re
 from google_play_scraper import Sort, reviews_all
 from urllib.parse import urlparse, parse_qs
 
-def extract_package_name(url):
-    """Extracts the package name from the Google Play Store URL, removing unnecessary parameters."""
-    parsed_url = urlparse(url)
-    query_params = parse_qs(parsed_url.query)
-    package_name = query_params.get("id", [None])[0]
-    if package_name:
-        return package_name
+def is_valid_url(url):
+    """Check if the given string is a valid URL."""
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+def extract_package_name(argument):
+    """Extracts the package name from either a Google Play Store URL or a direct package name."""
+    if is_valid_url(argument):
+        parsed_url = urlparse(argument)
+        query_params = parse_qs(parsed_url.query)
+        package_name = query_params.get("id", [None])[0]
+        if package_name:
+            return package_name
+        else:
+            raise ValueError("Invalid URL. Could not extract package name.")
     else:
-        raise ValueError("Invalid URL. Could not extract package name.")
+        # Assume the argument is a package name if it's not a valid URL
+        return argument
 
 def save_comments_to_file(app_package):
     if app_package is None:
@@ -56,16 +68,16 @@ def save_comments_to_file(app_package):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download comments from a Google Play Store app URL.")
-    parser.add_argument("url", nargs='?', help="The Google Play Store URL of the app.")
+    parser = argparse.ArgumentParser(description="Download comments from a Google Play Store app URL or by package name.")
+    parser.add_argument("input", nargs='?', help="The Google Play Store URL or the app package name.")
 
     args = parser.parse_args()
     
-    if args.url:
+    if args.input:
         try:
-            app_package = extract_package_name(args.url)
+            app_package = extract_package_name(args.input)
             save_comments_to_file(app_package)
-        except Exception as e:  # Catching a broader range of exceptions to capture and display any error.
+        except Exception as e:
             print(f"Error: {e}")
     else:
         parser.print_help()
