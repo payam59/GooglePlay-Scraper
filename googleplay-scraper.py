@@ -1,12 +1,15 @@
 import argparse
 import re
 from google_play_scraper import Sort, reviews_all
+from urllib.parse import urlparse, parse_qs
 
 def extract_package_name(url):
-    """Extracts the package name from the Google Play Store URL."""
-    match = re.search(r'id=([a-zA-Z0-9_.]+)', url)
-    if match:
-        return match.group(1)
+    """Extracts the package name from the Google Play Store URL, removing unnecessary parameters."""
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    package_name = query_params.get("id", [None])[0]
+    if package_name:
+        return package_name
     else:
         raise ValueError("Invalid URL. Could not extract package name.")
 
