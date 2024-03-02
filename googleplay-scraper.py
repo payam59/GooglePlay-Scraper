@@ -34,13 +34,23 @@ def save_comments_to_file(app_package):
         with open(file_name, 'w', encoding='utf-8') as file:
             for review in reviews:
                 content = review.get('content')
-                if content is None:
-                    print("Warning: Found a review without content. Skipping...")
+                # Fetch the review date. The actual field name depends on the library's return structure. It might be 'at', 'date', 'timestamp', etc.
+                review_date = review.get('at')  # Assuming 'at' is the field for the review date/timestamp
+                
+                if content is None or review_date is None:
+                    print("Warning: Found a review without content or date. Skipping...")
                     continue
-                file.write(content + '\n\n')
+                
+                # Format the review date if necessary. For example, if 'review_date' is a datetime object, you can format it as a string.
+                # review_date_str = review_date.strftime('%Y-%m-%d %H:%M:%S')  # Uncomment and adjust format as needed
+                
+                # Write both review content and date to the file. Adjust the formatting to your preference.
+                file.write(f"Date: {review_date}\n{content}\n\n")  # Use review_date_str if you formatted the date
+                
         print(f"Successfully saved {len(reviews)} comments to {file_name}")
     except Exception as e:
         print(f"An error occurred while saving comments: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Download comments from a Google Play Store app URL.")
